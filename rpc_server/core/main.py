@@ -6,5 +6,6 @@ from core import rpc_server
 
 
 def run():
-    server = rpc_server.RpcServer()
+    ip = input("请输入主机ip地址>>:")
+    server = rpc_server.RpcServer(ip)
     server.start()

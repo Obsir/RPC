@@ -39,17 +39,16 @@ class RpcHandler(object):
         cmd_split = args[0].split()
         if len(cmd_split) > 1:
             task_id = int(cmd_split[1])
-            response = None
+            response = {}
             if task_id in self.task_dict:
                 response = self.task_dict[task_id]["response"]
-                if response is None:
-                    client = self.task_dict[task_id]["client"]
-                    if client.done:
-                        response = self.task_dict[task_id]["response"] = client.response
-                        self.client_pool[client] = True
-                    else:
-                        response = None
-            print("\033[32;1mResponse:\033[0m\n\033[33;1m%s\033[0m" % response)
+                client = self.task_dict[task_id]["client"]
+                if client.done:
+                    self.client_pool[client] = True
+                    self.task_dict[task_id]["status"] = True
+            print("\033[32;1mResponse:\033[0m")
+            for ip in response:
+                print("\033[34;1m[%s]:\033[0m\n\033[33;1m%s\033[0m" % (ip, response[ip]))
 
     def cmd_checkall(self, *args):
         """
@@ -59,7 +58,7 @@ class RpcHandler(object):
         """
         for task_id in self.task_dict:
             print("\033[32;1mtask_id:\033[0m \033[34;1m%s\033[0m" % task_id, end=" | ")
-            if self.task_dict[task_id]["response"] is not None:
+            if self.task_dict[task_id]["status"]:
                 status = "\033[32;1mDone\033[0m"
             else:
                 status = "\033[31;1mRunning or Waiting to be checked\033[0m"
@@ -71,18 +70,21 @@ class RpcHandler(object):
         :param args:
         :return:
         """
-        for client in self.client_pool:
-            if self.client_pool[client]:
-                new_client = client
-                break
-        else:
-            new_client = rpc_client.RpcClient()
+        cmd_split = args[0].split()
+        if len(cmd_split) > 1:
+            for client in self.client_pool:
+                if self.client_pool[client]:
+                    new_client = client
+                    break
+            else:
+                new_client = rpc_client.RpcClient()
 
-        self.client_pool[new_client] = False
-        task_id = random.randint(10000, 99999)
-        threading.Thread(target=new_client.call, args=(args[0],)).start()
-        self.task_dict[task_id] = {
-            "client": new_client,
-            "response": new_client.response
-        }
-        print("[task_id]:", task_id)
+            self.client_pool[new_client] = False
+            task_id = random.randint(10000, 99999)
+            threading.Thread(target=new_client.call, args=(cmd_split[0], cmd_split[1:])).start()
+            self.task_dict[task_id] = {
+                "client": new_client,
+                "response": new_client.response,
+                "status": False
+            }
+            print("[task_id]:", task_id)

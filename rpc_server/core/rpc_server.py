@@ -11,12 +11,16 @@ import os
 
 
 class RpcServer(object):
-    def __init__(self):
+    def __init__(self, ip):
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-
+        self.ip = ip
         self.channel = self.connection.channel()
-
-        self.channel.queue_declare(queue='rpc_queue')
+        self.channel.exchange_declare(exchange="direct_exchange", exchange_type="direct")
+        result = self.channel.queue_declare(exclusive=True)
+        self.queue_name = result.method.queue
+        self.channel.queue_bind(exchange='direct_exchange',
+                                queue=self.queue_name,
+                                routing_key=ip)
 
     def on_request(self, ch, method, props, body):
         """
@@ -37,8 +41,7 @@ class RpcServer(object):
 
         ch.basic_publish(exchange='',
                          routing_key=props.reply_to,
-                         properties=pika.BasicProperties(correlation_id= \
-                                                             props.correlation_id),
+                         properties=pika.BasicProperties(correlation_id=props.correlation_id, message_id=self.ip),
                          body=response)
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
@@ -47,9 +50,6 @@ class RpcServer(object):
         开启服务器
         :return:
         """
-        self.channel.basic_qos(prefetch_count=1)
-        self.channel.basic_consume(self.on_request, queue='rpc_queue')
-
-        print(" [x] Awaiting RPC requests")
+        self.channel.basic_consume(self.on_request, queue=self.queue_name)
+        print(" [%s] Awaiting RPC requests" % self.ip)
         self.channel.start_consuming()
-
