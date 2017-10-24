@@ -1,0 +1,14 @@
+rpc_client
+├── README
+├── bin # 执行文件 目录
+│   ├── __init__.py
+│   └── client.py # 客户端执行程序
+├── conf # 配置文件
+│   └── __init__.py
+├── core # 核心文件 目录
+│   ├── __init__.py
+│   ├── main.py        # 客户端启动程序
+│   ├── rpc_client.py  # RPC客户端请求程序
+│   └── rpc_handler.py # RPC请求处理程序
+└── log # 日志目录
+    └── __init__.py

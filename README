@@ -1,0 +1,35 @@
+作者:Obser
+版本:测试版本 v0.1
+程序介绍:
+    异步执行命令的RPC程序
+    主要功能：
+        1. 客户端可以连接服务端执行终端命令，并查看结果
+        2. 异步执行命令，无需阻塞等待。
+        优化：
+        1. 自定义客户端请求连接池，提高请求客户端的复用性
+        2. 底层使用RabbitMQ RPC模式实现
+
+    命令：
+        · check task_id 查看任务结果
+        · checkall      查看当前所有任务状态
+
+    要求：
+        安装RabbitMQ服务
+
+
+程序结构：
+Obsir/
+├── README
+├── rpc_client # RPC客户端代码
+│   ├── README
+│   ├── __init__.py
+│   ├── bin
+│   ├── conf
+│   ├── core
+│   └── log
+└── rpc_server # RPC服务端代码
+    ├── README
+    ├── bin
+    ├── conf
+    ├── core
+    └── log
